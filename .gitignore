@@ -108,6 +108,7 @@ modules.order
 !.editorconfig
 !.get_maintainer.ignore
 !.gitattributes
+!.github/
 !.gitignore
 !.kunitconfig
 !.mailmap
@@ -178,3 +179,14 @@ sphinx_*/
 
 # Rust analyzer configuration
 /rust-project.json
+
+# Build artifacts
+/out/
+/toolchain/
+kernel_build_log.txt
+localversion
+build.sh
+# KernelSU specific
+/KernelSU/
+# Caching
+/.ccache/

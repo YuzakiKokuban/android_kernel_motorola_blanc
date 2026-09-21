@@ -68,6 +68,16 @@ touches the GKI ABI and will bootloop the device — check the CRC first:
 grep -w vendor_data_pad out/Module.symvers     # must be 0xf54e5881
 ```
 
+### Verified
+
+The baseline `main` build was compared against a known-good from-source kernel for
+this device: **16,516 non-Rust symbols exported by `vmlinux`, identical symbol set,
+0 CRC differences** — including `module_layout` (`0xe976b219`, the aggregate GKI ABI
+hash), `init_task` (`0x35075030`) and `vendor_data_pad` (`0xf54e5881`). The only
+churn is Rust mangled names, whose crate hash changes on every build and which no C
+vendor module consumes. The `ReSukiSU + SuSFS + Hybrid Mount` build reproduces the
+same gate, so those additions are ABI-neutral too.
+
 ## Flashing
 
 Flash **only** `boot`; keep `vendor_dlkm`, `system_dlkm`, `vendor_boot`, `dtbo` and

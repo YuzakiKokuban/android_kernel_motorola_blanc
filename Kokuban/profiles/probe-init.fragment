@@ -1,0 +1,6 @@
+# Single-variable tuning probe: 00-base, 10-network, 21-init-off.
+# Grade against Kokuban/abi/vmlinux.symvers.golden.
+
+source ../tuning/00-base.fragment
+source ../tuning/10-network.fragment
+source ../tuning/21-init-off.fragment

@@ -1,0 +1,8 @@
+# Stage 21 — drop zero-on-allocate / zero-the-stack and the KFENCE sampling
+# allocator. All three are pure instrumentation in Moto's own gki_defconfig.
+# INIT_STACK_ALL_ZERO and INIT_ON_ALLOC are security hardening: turning them off
+# means automatic stack variables and fresh allocations are no longer pre-zeroed.
+CONFIG_KFENCE=n
+CONFIG_INIT_ON_ALLOC_DEFAULT_ON=n
+CONFIG_INIT_STACK_NONE=y
+CONFIG_INIT_STACK_ALL_ZERO=n

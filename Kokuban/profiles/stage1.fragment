@@ -1,5 +1,0 @@
-# Cumulative tuning profile for ABI measurement: stages 00-base, 10-network.
-# Build with --kconfig-fragment Kokuban/profiles/stage1.fragment
-
-source ../tuning/00-base.fragment
-source ../tuning/10-network.fragment

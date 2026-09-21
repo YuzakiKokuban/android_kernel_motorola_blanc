@@ -1,0 +1,4 @@
+# Stage 20 — SLUB_DEBUG off.
+# Suspected ABI breaker: it adds tracking fields to the slab allocator's own
+# structures, so it is measured on its own rather than bundled with stage 21.
+CONFIG_SLUB_DEBUG=n

@@ -1,0 +1,6 @@
+# Single-variable tuning probe: 00-base, 10-network, 30-hz.
+# Grade against Kokuban/abi/vmlinux.symvers.golden.
+
+source ../tuning/00-base.fragment
+source ../tuning/10-network.fragment
+source ../tuning/30-hz.fragment

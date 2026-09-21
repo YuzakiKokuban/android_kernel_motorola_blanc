@@ -1,0 +1,7 @@
+# Stage 32 — drop per-task scheduler accounting. SCHED_DEBUG stays on: it is the
+# interface that exposes /sys/kernel/debug/sched/, so disabling it would remove
+# the runtime tuning knobs this project relies on.
+# SCHED_AUTOGROUP stays off: Android schedules through cgroups.
+CONFIG_SCHEDSTATS=n
+CONFIG_SCHED_INFO=n
+CONFIG_SCHED_AUTOGROUP=n

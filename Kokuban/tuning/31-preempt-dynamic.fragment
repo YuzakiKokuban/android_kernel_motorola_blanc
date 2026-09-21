@@ -1,0 +1,4 @@
+# Stage 31 — PREEMPT_DYNAMIC: keep the compile-time default at full preemption
+# but allow switching the mode at run time through
+# /sys/kernel/debug/sched/preempt instead of needing a rebuild per mode.
+CONFIG_PREEMPT_DYNAMIC=y

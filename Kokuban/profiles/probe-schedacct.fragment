@@ -1,0 +1,6 @@
+# Single-variable tuning probe: 00-base, 10-network, 32-sched-accounting.
+# Grade against Kokuban/abi/vmlinux.symvers.golden.
+
+source ../tuning/00-base.fragment
+source ../tuning/10-network.fragment
+source ../tuning/32-sched-accounting.fragment

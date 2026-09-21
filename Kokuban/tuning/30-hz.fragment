@@ -1,0 +1,4 @@
+# Stage 30 — raise the scheduling tick from 250 Hz to 300 Hz, i.e. finer
+# granularity for wakeups and preemption at a modest timer cost.
+CONFIG_HZ_300=y
+CONFIG_HZ=300

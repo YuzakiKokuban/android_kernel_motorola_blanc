@@ -1,4 +1,31 @@
-# 0003 — LZ4 ARMv8 NEON decompression
+# 0003 — LZ4 ARMv8 NEON decompression — REVERTED
+
+**Status: attempted, measured, reverted.** The stack below was applied and built
+successfully (including the NEON assembly), but the ABI baseline gate rejected it:
+**13 exported symbols changed CRC**, so the kernel was no longer module-compatible
+with the stock `vendor_dlkm`, which is this project's core invariant.
+
+Cause is structural, not a declaration mismatch. This vendoring replaces the
+kernel's LZ4 fork with upstream lz4 1.10, and the two generations lay out their
+stream state differently:
+
+| | kernel fork | upstream lz4 1.10 |
+|---|---|---|
+| stream state | `uint32_t hashTable[LZ4_HASH_SIZE_U32]` inline | external table pointer plus `tableType` / `dictCtx` |
+
+Every export whose type reaches `LZ4_stream_t *`, `LZ4_streamHC_t *` or
+`LZ4_streamDecode_t *` therefore gets a new CRC: `LZ4_compress_default`,
+`LZ4_compress_fast`, `LZ4_compress_HC`, `LZ4_loadDict`, `LZ4_loadDictHC`,
+`LZ4_saveDict`, `LZ4_saveDictHC`, `LZ4_resetStreamHC`, `LZ4_setStreamDecode`,
+`LZ4_compress_fast_continue`, `LZ4_compress_HC_continue`,
+`LZ4_decompress_fast_continue`, `LZ4_decompress_safe_continue`.
+
+An ABI-safe alternative exists — keep the kernel's `lib/lz4` intact and add only
+the NEON fast path plus a resume-capable decoder entry — but the real win is the
+EROFS read path, which this stack does not cover at all (see "Not covered: EROFS"
+below). The notes are kept for whoever picks it up.
+
+## Original attempt
 
 Applied to `android_kernel_motorola_blanc` only; no other Kokuban project uses it.
 

@@ -1,0 +1,9 @@
+# Stage 20 — drop debug instrumentation that is in Moto's own gki_defconfig.
+# These are runtime-cost options, not interfaces, so nothing is lost at run time.
+# INIT_STACK_ALL_ZERO is a security hardening: turning it off means automatic
+# stack variables are no longer pre-zeroed.
+CONFIG_KFENCE=n
+CONFIG_SLUB_DEBUG=n
+CONFIG_INIT_ON_ALLOC_DEFAULT_ON=n
+CONFIG_INIT_STACK_NONE=y
+CONFIG_INIT_STACK_ALL_ZERO=n

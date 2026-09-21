@@ -1,0 +1,7 @@
+# Stage 40 — KASAN off. Moto's gki_defconfig ships KASAN + KASAN_HW_TAGS, which is
+# the single largest remaining overhead, but it is also the one most likely to
+# change slab internals. Measure it against the golden symbol table before adopting.
+CONFIG_KASAN=n
+CONFIG_KASAN_HW_TAGS=n
+CONFIG_KASAN_INLINE=n
+CONFIG_KASAN_OUTLINE=n

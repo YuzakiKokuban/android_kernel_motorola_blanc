@@ -1,0 +1,12 @@
+# Stage 30 — scheduler.
+# SCHED_DEBUG stays enabled on purpose: it is the interface that exposes
+# /sys/kernel/debug/sched/ and the /proc/sys/kernel/sched_* tunables, so turning
+# it off would buy a small win by removing the ability to tune at all.
+# PREEMPT_DYNAMIC lets the preemption mode be switched at run time through
+# /sys/kernel/debug/sched/preempt instead of needing a rebuild per mode.
+CONFIG_SCHEDSTATS=n
+CONFIG_SCHED_INFO=n
+CONFIG_HZ_300=y
+CONFIG_HZ=300
+CONFIG_PREEMPT_DYNAMIC=y
+CONFIG_SCHED_AUTOGROUP=n

@@ -1,0 +1,10 @@
+# Stage 00 — I/O scheduler + TCP congestion control.
+# Shipped and already ABI-verified against the stock symbol table.
+CONFIG_MQ_IOSCHED_ADIOS=y
+CONFIG_MQ_IOSCHED_DEFAULT_ADIOS=y
+CONFIG_TCP_CONG_ADVANCED=y
+CONFIG_TCP_CONG_CUBIC=y
+CONFIG_TCP_CONG_BBR=y
+CONFIG_TCP_CONG_BRUTAL=y
+CONFIG_DEFAULT_CUBIC=y
+CONFIG_DEFAULT_TCP_CONG="cubic"

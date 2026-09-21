@@ -1,29 +1,14 @@
-# Razr Fold (blanc) game-tuning delta over the stock W3WB36.36-48-5 config.
+# Default tuning applied to every build (Kokuban Kernel CI project razrfold_sm8845).
 #
-# Applied on top of the stock config in arch/arm64/configs/blanc_defconfig, which
-# already carries the three mandatory ABI fixes (see Kokuban/README.md):
-#   CONFIG_GKI_TASK_STRUCT_VENDOR_SIZE_MAX=512   (stock reports 1024, ships 512)
-#   CONFIG_MODULE_SIG_PROTECT_LIST=""            (stock trims; protected modules then refuse to load)
-#   # CONFIG_TRIM_UNUSED_KSYMS is not set        (untrimmed: export every symbol)
+# The stages under Kokuban/tuning/ are cumulative and individually measurable; this
+# entry point names the ones that are adopted. Every build is graded against
+# Kokuban/abi/vmlinux.symvers.golden, so a stage that moves an exported symbol
+# fails the build instead of shipping.
 #
-# Every entry here only ADDS built-in code or flips a runtime-selectable default.
-# None of them may change the DWARF of an already-exported symbol, because the
-# stock vendor modules are never rebuilt and their CRCs must keep matching.
-# `abi_symbol_gates` in configs/projects.json enforces that on every CI build.
+# See Kokuban/README.md for the per-stage ABI measurement results.
 
-# --- Low-latency networking (online games: jitter and bufferbloat rather than raw speed).
-# BBR and Brutal are registered as available algorithms; the system default stays
-# cubic so nothing changes until `sysctl net.ipv4.tcp_congestion_control=bbr` (or
-# `tc qdisc ...` / per-socket TCP_BRUTAL_PARAMS) opts in at runtime.
-CONFIG_TCP_CONG_ADVANCED=y
-CONFIG_TCP_CONG_CUBIC=y
-CONFIG_TCP_CONG_BBR=y
-CONFIG_TCP_CONG_BRUTAL=y
-CONFIG_DEFAULT_CUBIC=y
-CONFIG_DEFAULT_TCP_CONG="cubic"
+# I/O scheduler (ADIOS) and TCP congestion control (BBR, Brutal).
+source tuning/00-base.fragment
 
-# --- ADIOS (Adaptive Deadline I/O Scheduler), built in and made the default MQ
-# scheduler. =y is required, not =m: this pipeline builds Image only, so a module
-# would never be built and CONFIG_MQ_IOSCHED_DEFAULT_ADIOS could not take effect.
-CONFIG_MQ_IOSCHED_ADIOS=y
-CONFIG_MQ_IOSCHED_DEFAULT_ADIOS=y
+# Low-latency queueing (CAKE, FQ_PIE, PIE).
+source tuning/10-network.fragment

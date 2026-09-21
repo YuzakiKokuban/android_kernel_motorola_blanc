@@ -52,10 +52,66 @@ Both are built **into** the kernel (`=y`). This pipeline builds `Image` only, so
 
 Ported patches are kept verbatim under `Kokuban/patches/` for provenance.
 
-Deliberately **not** touched: `CONFIG_HZ` (stock 250), the default congestion
+Deliberately **not** touched by the default profile: the default congestion
 control, THP mode, and every vendor driver — the GPU, display, touch, thermal and
 audio stacks live in the stock `vendor_dlkm` that this kernel does not replace, so
-kernel-side game tuning on this device is limited to the core kernel.
+kernel-side tuning on this device is limited to the core kernel.
+
+### Tuning stages
+
+Tuning is split into cumulative stages under `Kokuban/tuning/`, wired together by
+one-line profiles under `Kokuban/profiles/`, so each stage can be graded on its own
+against the ABI baseline:
+
+| Stage | Contents | Adopted |
+|---|---|---|
+| `00-base` | ADIOS default I/O scheduler; TCP BBR + TCP Brutal | yes |
+| `10-network` | CAKE / FQ_PIE / PIE / SFB / RED queueing; drops the obsolete `=m` congestion controls | yes |
+| `20-debug-off` | `KFENCE`, `SLUB_DEBUG`, `INIT_ON_ALLOC`, `INIT_STACK_ALL_ZERO` off | measured |
+| `30-sched` | `SCHEDSTATS`/`SCHED_INFO` off, `HZ=300`, `PREEMPT_DYNAMIC` | measured |
+| `40-kasan-off` | `KASAN` + `KASAN_HW_TAGS` off | measured |
+| LTO | built with `--lto thin` (the pipeline overrides `out/.config`, so this is a flag, not a fragment) | measured |
+
+`Kokuban/tuning.fragment` is the entry point CI uses, and names only the adopted
+stages. To grade another stage:
+
+```
+Build Kernel → project razrfold_sm8845
+  kconfig_fragment: Kokuban/profiles/stage3.fragment
+  lto:              thin            # optional
+```
+
+## Scheduling
+
+Four independent layers, cheapest first.
+
+**1. Runtime, no rebuild — sched_ext.** The kernel has `CONFIG_SCHED_CLASS_EXT=y`
+with `BPF_SYSCALL`, `BPF_JIT`, `BPF_JIT_ALWAYS_ON`, `DEBUG_INFO_BTF` and
+`SCHED_CORE` off, so `/sys/kernel/sched_ext/` exists and the fair class can be
+replaced by a BPF scheduler at run time (`state`, `ops`, `switch_all`). Two caveats
+must be checked on hardware: SELinux may refuse the BPF program load, and Moto
+drives frequency through vendor hooks + the stock `sched-walt` module, which may
+disagree with a scx scheduler's placement.
+
+**2. Runtime knobs.** With `CONFIG_SCHED_DEBUG=y` (kept on purpose, see stage 30)
+the classic tunables are available: `/proc/sys/kernel/sched_*`, EEVDF's
+`/sys/kernel/debug/sched/base_slice_ns`, and the `sched_feat` toggles. cgroup
+`cpu.uclamp.min/max` and cpusets pin a game to the prime cores; ADIOS is already the
+default block scheduler.
+
+**3. Config (stage 30).** `HZ=300` trades a little timer overhead for finer
+scheduling granularity; `PREEMPT_DYNAMIC` allows switching preemption mode at run
+time via `/sys/kernel/debug/sched/preempt`; `SCHEDSTATS`/`SCHED_INFO` are pure
+per-task accounting and cost nothing to drop. Already good in the stock config:
+`PREEMPT=y`, `UCLAMP_TASK` + `UCLAMP_TASK_GROUP`, `LRU_GEN`, `PSI`, schedutil,
+`SCHED_MC`, and `RCU_NOCB_CPU_DEFAULT_ALL` (RCU callbacks offloaded, less jitter).
+`SCHED_AUTOGROUP` stays off: Android schedules through cgroups and Google disables
+it deliberately.
+
+**4. Source patches — not done.** EEVDF/PELT constant changes or a CPU input boost
+have to be patched into `kernel/sched/`, which is exactly the class of change the
+ABI baseline exists to catch. Grade any such patch with the baseline before
+adopting it.
 
 ## ABI
 

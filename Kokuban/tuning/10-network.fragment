@@ -1,0 +1,12 @@
+# Stage 10 — low-latency queueing.
+# Pure additions, so no existing exported symbol changes shape. Also drops the
+# obsolete congestion controls that the stock config lists as =m: this pipeline
+# builds Image only, so a =m option builds nothing at all.
+CONFIG_NET_SCH_CAKE=y
+CONFIG_NET_SCH_FQ_PIE=y
+CONFIG_NET_SCH_PIE=y
+CONFIG_NET_SCH_SFB=y
+CONFIG_NET_SCH_RED=y
+CONFIG_TCP_CONG_BIC=n
+CONFIG_TCP_CONG_WESTWOOD=n
+CONFIG_TCP_CONG_HTCP=n

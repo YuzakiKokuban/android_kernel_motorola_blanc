@@ -94,6 +94,15 @@ profile is worth a flash test, not a default.
 The default `Kokuban/tuning.fragment` therefore adopts `00-base`, `10-network`,
 `30-hz` and `31-preempt-dynamic`, and every build re-checks that.
 
+### Feature stages
+
+Not every fragment in `Kokuban/tuning/` is a tuning — the directory is the
+project's kconfig entry point.
+
+| Stage | Change | Notes |
+|---|---|---|
+| `90-ntsync` | `CONFIG_NTSYNC=y` | Enables `/dev/ntsync` for the Wine/Proton game layer. 6.12 ships only the first revision of that driver (semaphores, 247 lines) behind `depends on BROKEN`, so it is replaced with the complete driver. See `Kokuban/patches/0004-ntsync.md`. |
+
 To grade any other stage or a new one:
 
 ```

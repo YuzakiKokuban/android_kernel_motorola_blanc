@@ -19,3 +19,6 @@ source tuning/30-hz.fragment
 
 # PREEMPT_DYNAMIC: switch preemption mode at run time instead of rebuilding.
 source tuning/31-preempt-dynamic.fragment
+
+# NT synchronisation driver for the Wine/Proton game layer (/dev/ntsync).
+source tuning/90-ntsync.fragment

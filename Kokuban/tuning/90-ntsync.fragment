@@ -1,0 +1,13 @@
+# Not a tuning: enables the NT synchronisation driver (/dev/ntsync).
+#
+# 6.12 already ships drivers/misc/ntsync.c but only the first revision of the
+# driver, which implements semaphores alone, and its Kconfig entry is gated
+# behind `depends on BROKEN`, so stock never builds it. Replacement 0004 swaps in
+# the complete driver (semaphore + mutex + event, WAIT_ANY/WAIT_ALL) and drops the
+# dependency.
+#
+# Needed by the Wine/Proton layer (GameNative, Winlator, Droidspaces) to run
+# Windows games: without it those titles fall back to slow user-space
+# synchronisation. Built in rather than modular, because this pipeline builds
+# Image only.
+CONFIG_NTSYNC=y

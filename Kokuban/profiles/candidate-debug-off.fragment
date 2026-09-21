@@ -1,0 +1,28 @@
+# Candidate profile: drops the debug instrumentation from Moto's own gki_defconfig.
+#
+# Measured deltas (see Kokuban/README.md): 11 symbols stop being exported, plus
+# init_on_alloc changes CRC because INIT_ON_ALLOC_DEFAULT_ON flips it between
+# static_key_true and static_key_false. Every one of those symbols belongs to the
+# feature being disabled.
+#
+# The ABI baseline gate rejects this as written. To adopt it, accept the deltas by
+# name in configs/projects.json under abi_baseline:
+#
+#   "allowed_crc_symbols": ["init_on_alloc"],
+#   "allowed_missing_symbols": [
+#     "__kfence_pool", "kfence_sample_interval",
+#     "get_each_kmemcache_object", "get_slabinfo", "get_track", "validate_slab_cache",
+#     "__kasan_kmalloc", "kasan_flag_enabled", "kasan_flag_vmalloc", "kasan_mode",
+#     "mte_async_or_asymm_mode"
+#   ]
+#
+# Flash-test it before trusting it: no stock module should import those symbols,
+# but that can only be proven on hardware.
+
+source ../tuning/00-base.fragment
+source ../tuning/10-network.fragment
+source ../tuning/30-hz.fragment
+source ../tuning/31-preempt-dynamic.fragment
+source ../tuning/20-slub-debug-off.fragment
+source ../tuning/21-init-off.fragment
+source ../tuning/40-kasan-off.fragment

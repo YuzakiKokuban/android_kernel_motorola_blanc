@@ -57,27 +57,48 @@ control, THP mode, and every vendor driver — the GPU, display, touch, thermal 
 audio stacks live in the stock `vendor_dlkm` that this kernel does not replace, so
 kernel-side tuning on this device is limited to the core kernel.
 
-### Tuning stages
+### Tuning stages, measured
 
-Tuning is split into cumulative stages under `Kokuban/tuning/`, wired together by
-one-line profiles under `Kokuban/profiles/`, so each stage can be graded on its own
-against the ABI baseline:
+Every stage under `Kokuban/tuning/` was built on its own in CI and graded against
+`Kokuban/abi/vmlinux.symvers.golden` (16,516 non-Rust `vmlinux` exports). "Clean"
+means zero CRC differences and zero symbols lost.
 
-| Stage | Contents | Adopted |
-|---|---|---|
-| `00-base` | ADIOS default I/O scheduler; TCP BBR + TCP Brutal | yes |
-| `10-network` | CAKE / FQ_PIE / PIE / SFB / RED queueing; drops the obsolete `=m` congestion controls | yes |
-| `20-debug-off` | `KFENCE`, `SLUB_DEBUG`, `INIT_ON_ALLOC`, `INIT_STACK_ALL_ZERO` off | measured |
-| `30-sched` | `SCHEDSTATS`/`SCHED_INFO` off, `HZ=300`, `PREEMPT_DYNAMIC` | measured |
-| `40-kasan-off` | `KASAN` + `KASAN_HW_TAGS` off | measured |
-| LTO | built with `--lto thin` (the pipeline overrides `out/.config`, so this is a flag, not a fragment) | measured |
+| Stage | Change | Measured against the baseline | Adopted |
+|---|---|---|---|
+| `00-base` | ADIOS default I/O scheduler; TCP BBR + TCP Brutal | clean | yes |
+| `10-network` | CAKE / FQ_PIE / PIE / SFB / RED; drops the obsolete `=m` congestion controls | clean (3 new `pie_*` exports) | yes |
+| `30-hz` | `CONFIG_HZ` 250 → 300 | clean | yes |
+| `31-preempt-dynamic` | `PREEMPT_DYNAMIC` | clean | yes |
+| `32-sched-accounting` | `SCHEDSTATS` / `SCHED_INFO` off | **10,619 of 16,516 CRCs changed** | **no** |
+| `20-slub-debug-off` | `SLUB_DEBUG` off | 4 symbols lost (its own: `get_each_kmemcache_object`, `get_slabinfo`, `get_track`, `validate_slab_cache`) | no |
+| `21-init-off` | `KFENCE` + `INIT_ON_ALLOC` + `INIT_STACK_ALL_ZERO` off | `init_on_alloc` CRC changed + `__kfence_pool`, `kfence_sample_interval` lost | no |
+| `40-kasan-off` | `KASAN` + `KASAN_HW_TAGS` off | 5 symbols lost (its own: `__kasan_kmalloc`, `kasan_flag_enabled`, `kasan_flag_vmalloc`, `kasan_mode`, `mte_async_or_asymm_mode`) | no |
+| LTO | `--lto thin` | **16,447 of 16,516 CRCs changed, 69 symbols lost** | **no** |
 
-`Kokuban/tuning.fragment` is the entry point CI uses, and names only the adopted
-stages. To grade another stage:
+Two results are worth stating plainly:
+
+* **`SCHED_INFO` is embedded in `struct task_struct`.** Turning it off shrinks the
+  struct, so every symbol whose type reaches `task_struct` changes CRC — 64 % of the
+  whole ABI from one config line. This is the single most dangerous knob in the list.
+* **Thin LTO reshapes essentially the entire ABI.** Inlining and symbol elimination
+  move 99.6 % of CRCs and drop 69 exports, so a GKI kernel that must load stock
+  modules cannot be built with LTO at all.
+
+The three debug-off stages are a different kind of result: they lose only their own
+feature's symbols, which no vendor driver has any reason to import. That cannot be
+proven without the stock modules, so they stay out of the default and are offered as
+`Kokuban/profiles/candidate-debug-off.fragment`, which documents the exact
+`allowed_missing_symbols` / `allowed_crc_symbols` list needed to accept them. That
+profile is worth a flash test, not a default.
+
+The default `Kokuban/tuning.fragment` therefore adopts `00-base`, `10-network`,
+`30-hz` and `31-preempt-dynamic`, and every build re-checks that.
+
+To grade any other stage or a new one:
 
 ```
 Build Kernel → project razrfold_sm8845
-  kconfig_fragment: Kokuban/profiles/stage3.fragment
+  kconfig_fragment: Kokuban/profiles/probe-kasan.fragment
   lto:              thin            # optional
 ```
 

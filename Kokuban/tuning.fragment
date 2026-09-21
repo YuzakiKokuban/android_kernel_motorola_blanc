@@ -1,14 +1,21 @@
 # Default tuning applied to every build (Kokuban Kernel CI project razrfold_sm8845).
 #
-# The stages under Kokuban/tuning/ are cumulative and individually measurable; this
-# entry point names the ones that are adopted. Every build is graded against
-# Kokuban/abi/vmlinux.symvers.golden, so a stage that moves an exported symbol
-# fails the build instead of shipping.
+# Only stages that measured ZERO delta against Kokuban/abi/vmlinux.symvers.golden
+# are listed here. Each other stage is kept in Kokuban/tuning/ with its measured
+# result in Kokuban/README.md, so the decision to adopt one is a documented edit
+# rather than a guess.
 #
-# See Kokuban/README.md for the per-stage ABI measurement results.
+# The profile is graded on every build: a stage that moves an exported symbol
+# fails the build instead of shipping.
 
 # I/O scheduler (ADIOS) and TCP congestion control (BBR, Brutal).
 source tuning/00-base.fragment
 
 # Low-latency queueing (CAKE, FQ_PIE, PIE).
 source tuning/10-network.fragment
+
+# Scheduling tick 250 -> 300 Hz.
+source tuning/30-hz.fragment
+
+# PREEMPT_DYNAMIC: switch preemption mode at run time instead of rebuilding.
+source tuning/31-preempt-dynamic.fragment

@@ -561,6 +561,23 @@ int LZ4_decompress_safe_continue(LZ4_streamDecode_t *LZ4_streamDecode,
 	const char *source, char *dest, int compressedSize,
 	int maxDecompressedSize);
 
+/*
+ * ARMv8 NEON accelerated decompression.
+ *
+ * These run the assembly decoder over as much of the block as it can safely
+ * cover and finish the remainder with the generic C decoder. Unlike
+ * LZ4_decompress_safe*(), the caller states whether the buffers alias: with
+ * @dip set, the assembly may rewrite the partially consumed token inside the
+ * source, which is what in-place decoders (EROFS maptype 3) need. They are
+ * usable on every architecture -- without the accelerator they simply fall
+ * through to the generic decoder.
+ */
+ssize_t LZ4_arm64_decompress_safe(const void *source, void *dest,
+				  size_t inputSize, size_t outputSize, bool dip);
+ssize_t LZ4_arm64_decompress_safe_partial(const void *source, void *dest,
+					  size_t inputSize, size_t outputSize,
+					  bool dip);
+
 /**
  * LZ4_decompress_fast_continue() - Decompress blocks in streaming mode
  * @LZ4_streamDecode: the 'LZ4_streamDecode_t' structure

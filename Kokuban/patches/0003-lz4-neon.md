@@ -20,6 +20,8 @@ Every export whose type reaches `LZ4_stream_t *`, `LZ4_streamHC_t *` or
 `LZ4_compress_fast_continue`, `LZ4_compress_HC_continue`,
 `LZ4_decompress_fast_continue`, `LZ4_decompress_safe_continue`.
 
+**Superseded by `0005-lz4-neon-abi-safe.md`**, which keeps every type intact.
+
 An ABI-safe alternative exists — keep the kernel's `lib/lz4` intact and add only
 the NEON fast path plus a resume-capable decoder entry — but the real win is the
 EROFS read path, which this stack does not cover at all (see "Not covered: EROFS"

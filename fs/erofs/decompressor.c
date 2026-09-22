@@ -238,21 +238,21 @@ static int z_erofs_lz4_decompress_mem(struct z_erofs_lz4_decompress_ctx *ctx,
 
 	out = dst + rq->pageofs_out;
 	/*
-	 * maptype 3 means the compressed data lies inside the output range, so
-	 * the accelerated decoder has to be told that the buffers alias: it then
+	 * The accelerated decoder needs to know whether the buffers alias:
+	 * maptype 3 keeps the compressed data inside the output range, where it
 	 * rewrites the partially consumed token in the source before handing the
-	 * remainder to the generic decoder. For every other maptype `src` is a
-	 * separate buffer and no write-back is needed.
+	 * remainder to the generic decoder. Every other maptype hands it a
+	 * separate read-only buffer. The partial variant takes one size because
+	 * targetOutputSize and dstCapacity are the same here.
 	 */
 	/* legacy format could compress extra data in a pcluster. */
 	if (rq->partial_decoding || !support_0padding)
 		ret = LZ4_arm64_decompress_safe_partial(src + inputmargin, out,
-				rq->inputsize, rq->outputsize, rq->outputsize,
-				maptype == 3);
+				rq->inputsize, rq->outputsize, maptype == 3);
 	else
 		ret = LZ4_arm64_decompress_safe(src + inputmargin, out,
-					  rq->inputsize, rq->outputsize,
-					  maptype == 3);
+						rq->inputsize, rq->outputsize,
+						maptype == 3);
 
 	if (ret != rq->outputsize) {
 		erofs_err(rq->sb, "failed to decompress %d in[%u, %u] out[%u]",
